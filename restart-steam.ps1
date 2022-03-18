@@ -1,9 +1,10 @@
 <#
 .SYNOPSIS
-    Restarting Valve's steam client in case it's not loading the GUI or frozen.
+    Restarting Valve's steam client.
 
 .DESCRIPTION
-    The script will search a running process "steam.exe", send a shutdown command "steam.exe -shutdown" and restart steam by using the steam protocol handler "steam:".
+     After starting my computer I sometimes experience a bug of the steam client, rendering it having no GUI. Tired of manually killing the steam process in the task manager, I wrote a simple script to restart steam.
+     The script will search a running process ```steam.exe```, send a shutdown command ```steam.exe -shutdown``` and restart steam by using the steam protocol handler ```steam:```.
 
 .PARAMETER Param1
     No parameters yet.
