@@ -1,4 +1,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/nopantsfriday/restart_steam_client/blob/master/LICENSE)
+<br>Feel free to use, copy, fork, modify, merge, publish or distribute the script and/or parts of the script.
 # About
 After starting my computer I sometimes experience a bug of the steam client, rendering it having no GUI. Tired of manually killing the steam process in the task manager, I wrote a simple PowerShell script to restart steam.
 
