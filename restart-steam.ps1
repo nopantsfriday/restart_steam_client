@@ -18,31 +18,66 @@
 .NOTES
     Filename: restart-steam.ps1
     Author: https://github.com/nopantsfriday
-    Modified date: 2022-03-19
+    Create date: 2022-03-18
+    Modified date: 2023-02-12
     Version 1.0 - Initial release without any try catch and steam procotol check as it works flawlessly on the developers machine.
-    Versiion 1.0.1 - Check if Steam protocol handler is registered.
+    Version 1.0.1 - Added Steam protocol check, added termination of Steam process when Steam could not be shutdown gracefully
 #>
 
 $steam_running = Get-Process -name steam -ErrorAction SilentlyContinue
 if ($steam_running) {
 
     $steam = ( get-process -name steam).path 
-    Write-Host "Found Steam client: " -NoNewline; Write-Host $steam -BackgroundColor Black -ForegroundColor Cyan
+    Write-Host "Found Steam client:"; Write-Host $steam -BackgroundColor Black -ForegroundColor Cyan
+    Write-Host "Sending shutdown command. Waiting 10 seconds for Steam to start."; Write-Host $steam "-shutdown" -BackgroundColor Black -ForegroundColor Cyan
     &$steam -shutdown
-    Write-Host "Sending shutdown command: " -NoNewline; Write-Host $steam "-shutdown" -BackgroundColor Black -ForegroundColor Cyan
-    Write-Host "Starting Steam in 5 seconds." -ForegroundColor DarkYellow
-    Start-Sleep -s 5
-    Write-Host "Starting Steam." -ForegroundColor Green
+    Start-Sleep -s 10
+    if (Get-Process -Name "steam" -ErrorAction SilentlyContinue) {
+        Stop-Process -Name "steam" -ErrorAction SilentlyContinue
+        Write-Host "Steam could not be shutdown gracefully and was terminated." -ForegroundColor Red
+    }
     &$steam
-    
-}
-if (!$steam_running) {
-    if ((Test-Path -Path "registry::HKEY_CLASSES_ROOT\steam\Shell\Open\Command")) {
-        Write-Host "Steam not running. Starting Steam." -ForegroundColor Green
-        Start-Process steam:
+    Start-Sleep -s 1
+    if ( (Get-Process -Name "steam" -ErrorAction SilentlyContinue).Count -eq 1) {
+        Write-Host "Steam started successfully." -ForegroundColor Green
     }
     else {
-        Write-Host "Steam is not running and the Steam protocol handler could not be found. Pleas start Steam manually." -ForegroundColor Red
-        Start-Sleep -s 5
+        Write-Host "Steam could not be started. Please try to start Steam manually." -ForegroundColor Red
     }
 }
+if (!$steam_running) {
+    Write-Host "Steam is not running. Trying to start steam." -ForegroundColor DarkRed
+
+    $test_steam_protocol = test-Path -Path registry::HKEY_CLASSES_ROOT\steam
+
+    if (!$test_steam_protocol) {
+        write-host "Could not find Steam handler. Steam might not be properly installed." -ForegroundColor Red
+    }
+    else {
+        Write-Host "Starting Steam"
+        Start-Process steam:
+    }
+
+    Start-Sleep -s 1
+    if ( (Get-Process -Name "steam" -ErrorAction SilentlyContinue).Count -eq 1) {
+        Write-Host "Steam started successfully." -ForegroundColor Green
+    }
+    else {
+        Write-Host "Steam could not be started. Please try to start Steam manually." -ForegroundColor Red
+    }
+}
+
+function keypress_wait {
+    param (
+        [int]$seconds = 10
+    )
+    $loops = $seconds * 10
+    Write-Host "Press any key to exit. (Window will automatically close in $seconds seconds.)" -ForegroundColor Yellow
+    for ($i = 0; $i -le $loops; $i++) {
+        if ([Console]::KeyAvailable) { break; }
+        Start-Sleep -Milliseconds 100
+    }
+    if ([Console]::KeyAvailable) { return [Console]::ReadKey($true); }
+    else { return $null ; }
+}
+keypress_wait
