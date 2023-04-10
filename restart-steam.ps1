@@ -22,6 +22,7 @@
     Modified date: 2023-02-12
     Version 1.0 - Initial release without any try catch and steam procotol check as it works flawlessly on the developers machine.
     Version 1.0.1 - Added Steam protocol check, added termination of Steam process when Steam could not be shutdown gracefully
+    Version 1.0.2 - Added Wait-Process instad of Start-Sleep to check if Steam is running/killed
 #>
 
 $steam_running = Get-Process -name steam -ErrorAction SilentlyContinue
@@ -31,13 +32,13 @@ if ($steam_running) {
     Write-Host "Found Steam client:"; Write-Host $steam -BackgroundColor Black -ForegroundColor Cyan
     Write-Host "Sending shutdown command. Waiting 10 seconds for Steam to start."; Write-Host $steam "-shutdown" -BackgroundColor Black -ForegroundColor Cyan
     &$steam -shutdown
-    Start-Sleep -s 10
+    Wait-Process -Name steam -Timeout 10 -ErrorAction SilentlyContinue
     if (Get-Process -Name "steam" -ErrorAction SilentlyContinue) {
         Stop-Process -Name "steam" -ErrorAction SilentlyContinue
         Write-Host "Steam could not be shutdown gracefully and was terminated." -ForegroundColor Red
     }
     &$steam
-    Start-Sleep -s 1
+    Wait-Process -Name steam -Timeout 2 -ErrorAction SilentlyContinue
     if ( (Get-Process -Name "steam" -ErrorAction SilentlyContinue).Count -eq 1) {
         Write-Host "Steam started successfully." -ForegroundColor Green
     }
@@ -58,7 +59,7 @@ if (!$steam_running) {
         Start-Process steam:
     }
 
-    Start-Sleep -s 1
+    Wait-Process -Name steam -Timeout 2 -ErrorAction SilentlyContinue
     if ( (Get-Process -Name "steam" -ErrorAction SilentlyContinue).Count -eq 1) {
         Write-Host "Steam started successfully." -ForegroundColor Green
     }
